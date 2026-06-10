@@ -5,7 +5,8 @@
 # findings aren't silently lost at session end.
 #
 # Exit 0 → no-op (nothing worth capturing, or hook suppressed).
-# Exit 2 → output is fed back to Claude as a user message, triggering capture.
+# Exit 2 → stderr content is fed back to Claude as a user message, triggering capture.
+# Note: Claude Code Stop hooks deliver rewake content via stderr, not stdout.
 #
 # The stop_hook_active flag in the payload prevents re-entry (this hook won't
 # fire again for the follow-up capture turn).
@@ -69,7 +70,7 @@ BASH_COUNT=$(echo "$COUNTS" | awk '{print $2}')
 # Trigger if any file was written/edited, or if there were ≥ 4 shell calls
 # (suggesting investigation/debugging worth preserving).
 if [[ "${WRITE_EDIT:-0}" -ge 1 ]] || [[ "${BASH_COUNT:-0}" -ge 4 ]]; then
-  echo "Session ended with ${WRITE_EDIT} file edit(s) and ${BASH_COUNT} shell call(s). Please run /wiki-quick-chat-capture now to preserve any reusable findings before this context closes."
+  echo "Session ended with ${WRITE_EDIT} file edit(s) and ${BASH_COUNT} shell call(s). Please run /wiki-quick-chat-capture now to preserve any reusable findings before this context closes." >&2
   exit 2
 fi
 
