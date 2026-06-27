@@ -2,9 +2,9 @@
 
 Python port of ``setup.sh`` for the pip-installed package. The skill content
 lives inside the installed package (``obsidian_wiki/_data/skills``) instead of a
-cloned repo, so this wires the bundled skills into every supported AI agent's
-skills directory and writes ``~/.obsidian-wiki/config`` so the skills resolve
-the vault from any project.
+cloned repo, so this wires the bundled skills into the shared Agent Skills
+directory plus agent-specific carve-outs and writes ``~/.obsidian-wiki/config``
+so the skills resolve the vault from any project.
 """
 
 from __future__ import annotations
@@ -87,13 +87,8 @@ def install_skills(
         if link_path.is_symlink() or link_path.is_file():
             link_path.unlink()
         elif link_path.is_dir():
-            # A real directory we previously copied here is safe to replace;
-            # anything else is the user's and we leave it alone.
-            if (link_path / "SKILL.md").exists():
-                shutil.rmtree(link_path)
-            else:
-                print(f"   ⚠️  {link_path} is not a managed skill, skipping")
-                continue
+            print(f"   ⚠️  {link_path} is a real directory, skipping")
+            continue
 
         if mode == "symlink":
             link_path.symlink_to(skill, target_is_directory=True)
@@ -110,21 +105,13 @@ def install_skills(
 
 
 # Agents whose skills directory lives under $HOME. (path-under-home, label,
-# subset). All get every skill — pip users have no cloned repo to host
-# project-scoped skills, so everything must be globally discoverable.
+# subset). Most modern harnesses read ~/.agents/skills directly or through a
+# user-managed adapter. Pi and Hermes are explicit carve-outs because they need
+# their own global skill directories.
 GLOBAL_AGENT_DIRS: list[tuple[str, str, tuple[str, ...] | None]] = [
-    (".claude/skills", "~/.claude/skills/ (Claude Code)", None),
-    (".gemini/skills", "~/.gemini/skills/ (Gemini CLI)", None),
-    (".gemini/antigravity/skills", "~/.gemini/antigravity/skills/ (Antigravity, legacy)", None),
-    (".codex/skills", "~/.codex/skills/ (Codex)", None),
-    (".hermes/skills", "~/.hermes/skills/ (Hermes default)", None),
-    (".openclaw/skills", "~/.openclaw/skills/ (OpenClaw)", None),
-    (".copilot/skills", "~/.copilot/skills/ (GitHub Copilot CLI)", None),
-    (".trae/skills", "~/.trae/skills/ (Trae)", None),
-    (".trae-cn/skills", "~/.trae-cn/skills/ (Trae CN)", None),
-    (".kiro/skills", "~/.kiro/skills/ (Kiro CLI)", None),
-    (".pi/agent/skills", "~/.pi/agent/skills/ (Pi)", None),
-    (".agents/skills", "~/.agents/skills/ (OpenCode, Aider, Droid, generic)", None),
+    (".agents/skills", "~/.agents/skills/ (shared Agent Skills)", None),
+    (".pi/agent/skills", "~/.pi/agent/skills/ (Pi carve-out)", None),
+    (".hermes/skills", "~/.hermes/skills/ (Hermes default carve-out)", None),
 ]
 
 
@@ -296,19 +283,22 @@ def _check_stale() -> None:
         )
         return
 
-    # Even if the version matches, check that ~/.claude/skills has the full set.
-    claude_skills_dir = HOME / ".claude" / "skills"
-    if claude_skills_dir.is_dir():
-        bundled = set(list_skills())
-        installed = {p.name for p in claude_skills_dir.iterdir() if p.is_dir()}
+    # Even if the version matches, check the shared root plus carve-outs.
+    bundled = set(list_skills())
+    for rel, label, _subset in GLOBAL_AGENT_DIRS:
+        agent_dir = HOME / rel
+        if not agent_dir.is_dir():
+            continue
+        installed = {p.name for p in agent_dir.iterdir() if p.is_dir()}
         missing = bundled - installed
         if missing:
             print(
-                f"⚠️  {len(missing)} skill(s) missing from ~/.claude/skills/ "
+                f"⚠️  {len(missing)} skill(s) missing from {label} "
                 f"(e.g. {', '.join(sorted(missing)[:3])}{', ...' if len(missing) > 3 else ''}).\n"
                 f"   Run: obsidian-wiki setup",
                 file=sys.stderr,
             )
+            return
 
 
 # ── Commands ─────────────────────────────────────────────────────────────────
