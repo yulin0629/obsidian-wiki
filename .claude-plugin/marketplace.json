@@ -12,43 +12,7 @@
       "version": "1.0.0",
       "author": {
         "name": "Yi-Cian Wang"
-      },
-      "strict": false,
-      "skills": [
-        "./claude-history-ingest",
-        "./codex-history-ingest",
-        "./copilot-history-ingest",
-        "./cross-linker",
-        "./daily-update",
-        "./graph-colorize",
-        "./hermes-history-ingest",
-        "./llm-wiki",
-        "./memory-bridge",
-        "./openclaw-history-ingest",
-        "./pi-history-ingest",
-        "./tag-taxonomy",
-        "./vault-skill-factory",
-        "./wiki-agent",
-        "./wiki-capture",
-        "./wiki-context-pack",
-        "./wiki-dashboard",
-        "./wiki-dedup",
-        "./wiki-digest",
-        "./wiki-export",
-        "./wiki-history-ingest",
-        "./wiki-import",
-        "./wiki-ingest",
-        "./wiki-lint",
-        "./wiki-query",
-        "./wiki-rebuild",
-        "./wiki-research",
-        "./wiki-setup",
-        "./wiki-stage-commit",
-        "./wiki-status",
-        "./wiki-switch",
-        "./wiki-synthesize",
-        "./wiki-update"
-      ]
+      }
     }
   ]
 }
