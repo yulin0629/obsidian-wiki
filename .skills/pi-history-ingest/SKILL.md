@@ -220,10 +220,10 @@ For each impacted project, create/update `projects/<name>/<name>.md`.
 
 Before writing any page, verify the draft against the evidence ledger:
 
-1. Every extracted claim has at least one `<!-- source: pi:... -->` reference.
+1. Every claim (extracted / ^[inferred] / ^[ambiguous]) has at least one `pi:...` source reference; extracted claims must use a nearby `<!-- source: pi:... -->` comment.
 2. Every source reference points to a selected session file and an entry on the active branch (or a cited `compaction` / `branch_summary`).
-3. Proper nouns, tool names, command names, filenames, URLs, package names, and error strings in extracted claims appear in the cited entry text or command fields. Use literal search (`grep`/`rg`) on the session file for distinctive strings when in doubt.
-4. If a claim cannot be verified, either delete it or mark it `^[inferred]` with the supporting source refs. Never leave an unverifiable claim unmarked as extracted.
+3. Proper nouns, tool names, command names, filenames, URLs, package names, and error strings in claims appear in the cited entry text or command fields. Use literal search (`grep`/`rg`) on the session file for distinctive strings when in doubt.
+4. If a claim cannot be verified, either delete it or mark it `^[inferred]` / `^[ambiguous]` with the supporting source refs; never leave unverifiable content without one of these markers (unmarked implies extracted).
 5. Do not write facts learned from the model's training data or the current agent session unless they are explicitly present in the Pi session evidence.
 
 ## Step 5: Update Manifest, Log, and Index
