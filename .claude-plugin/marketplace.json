@@ -8,8 +8,8 @@
     {
       "name": "wiki-kit",
       "source": "./.skills",
-      "description": "32 wiki skills: history-ingest per AI tool, query/ingest/maintain the vault, cross-linking, tagging, export/import, and more.",
-      "version": "1.1.0",
+      "description": "33 wiki skills: history-ingest per AI tool, query/ingest/maintain the vault, cross-linking, tagging, export/import, and more.",
+      "version": "1.1.1",
       "author": {
         "name": "Yi-Cian Wang"
       }
