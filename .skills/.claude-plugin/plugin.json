@@ -1,7 +1,7 @@
 {
   "name": "wiki-kit",
-  "description": "33 wiki skills: history-ingest per AI tool, query/ingest/maintain the vault, cross-linking, tagging, export/import, and more.",
-  "version": "1.0.0",
+  "description": "32 wiki skills: history-ingest per AI tool, query/ingest/maintain the vault, cross-linking, tagging, export/import, and more.",
+  "version": "1.1.0",
   "author": {
     "name": "Yi-Cian Wang"
   },
@@ -20,7 +20,6 @@
     "./tag-taxonomy",
     "./vault-skill-factory",
     "./wiki-agent",
-    "./wiki-capture",
     "./wiki-context-pack",
     "./wiki-dashboard",
     "./wiki-dedup",
