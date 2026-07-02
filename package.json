@@ -1,0 +1,9 @@
+{
+  "name": "wiki-kit",
+  "version": "1.0.0",
+  "description": "33 wiki skills: history-ingest per AI tool, query/ingest/maintain the vault, cross-linking, tagging, export/import, and more.",
+  "private": true,
+  "pi": {
+    "skills": ["./.skills"]
+  }
+}
