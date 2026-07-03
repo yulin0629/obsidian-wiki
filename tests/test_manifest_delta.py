@@ -92,5 +92,61 @@ class ManifestDeltaRelativeKeyTest(unittest.TestCase):
         self.assertIn("NEW\t", out)
 
 
+class ManifestNormalizeRelativeKeyTest(unittest.TestCase):
+    """cmd_normalize must not corrupt relative source keys.
+
+    canonical() resolves a relative key against the CWD, so canonicalizing one
+    would rewrite it to a bogus absolute path and persist the damage. normalize
+    only dedups/canonicalizes absolute keys; relative keys must survive as-is.
+    """
+
+    def setUp(self) -> None:
+        self.tmp = tempfile.TemporaryDirectory()
+        self.vault = Path(self.tmp.name) / "vault"
+        self.vault.mkdir()
+        self.manifest = self.vault / ".manifest.json"
+
+    def tearDown(self) -> None:
+        self.tmp.cleanup()
+
+    def _write_manifest(self, sources: dict) -> None:
+        m = {"version": 1, "sources": sources, "projects": {}, "stats": {}}
+        self.manifest.write_text(json.dumps(m, indent=2))
+
+    def _keys_after_normalize(self, cwd: str) -> list:
+        prev = os.getcwd()
+        os.chdir(cwd)
+        try:
+            buf = io.StringIO()
+            with contextlib.redirect_stdout(buf):
+                rc = manifest.main(["normalize", str(self.vault)])
+            self.assertEqual(rc, 0)
+        finally:
+            os.chdir(prev)
+        return list(json.loads(self.manifest.read_text())["sources"].keys())
+
+    def test_relative_key_preserved_regardless_of_cwd(self) -> None:
+        relkey = "-Users-yician-github/abc.jsonl"
+        self._write_manifest({relkey: {"ingested_at": "2020-01-01T00:00:00Z"}})
+        # Run from an unrelated CWD; the relative key must not be abspath-rewritten.
+        keys = self._keys_after_normalize(self.tmp.name)
+        self.assertEqual(keys, [relkey])
+
+    def test_absolute_keys_still_dedup_and_canonicalize(self) -> None:
+        # Two spellings of the same absolute path must merge into one canonical key.
+        abs_dir = str(Path(self.tmp.name) / "sessions")
+        os.makedirs(abs_dir)
+        canon = os.path.join(abs_dir, "x.jsonl")
+        messy = os.path.join(abs_dir, "sub", "..", "x.jsonl")
+        self._write_manifest(
+            {
+                canon: {"ingested_at": "2020-01-01T00:00:00Z"},
+                messy: {"ingested_at": "2021-01-01T00:00:00Z"},
+            }
+        )
+        keys = self._keys_after_normalize(self.tmp.name)
+        self.assertEqual(keys, [canon])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -69,12 +69,15 @@ def cmd_normalize(args: argparse.Namespace) -> int:
         if not os.path.isabs(key):
             # Real vaults store some keys relative to the ingest root (e.g.
             # "-Users-x-github/abc.jsonl" under ~/.claude/projects/). canonical()
-            # resolves those against the CWD, so normalize would rewrite them to
-            # a bogus absolute path. Warn rather than silently corrupt them.
-            print(f"  WARN   relative key resolved against CWD: {key}")
-        ckey = canonical(key)
-        if ckey != key:
-            rekeyed += 1
+            # would resolve those against the CWD and rewrite them to a bogus
+            # absolute path. normalize only dedups/canonicalizes absolute keys, so
+            # preserve relative keys untouched (safe no-op) and warn.
+            print(f"  WARN   preserving relative key as-is (not canonicalized): {key}")
+            ckey = key
+        else:
+            ckey = canonical(key)
+            if ckey != key:
+                rekeyed += 1
         if ckey in new_sources:
             new_sources[ckey] = _newest(new_sources[ckey], entry)
             collisions += 1
