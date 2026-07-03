@@ -116,12 +116,14 @@ def needs_extraction(
     depend on the caller passing the right --since.  --since only narrows the
     scan range; it never suppresses extraction of a file with a fresh output.
     """
-    mtime = os.path.getmtime(source_path)
-    # --since narrows the scan range: skip files not modified since the cutoff.
-    if since_ts is not None and mtime < since_ts:
-        return False
+    # A missing output is always (re)extracted, regardless of --since.
     if not os.path.exists(out_path):
         return True
+    mtime = os.path.getmtime(source_path)
+    # --since narrows the scan range: among files that already have an output,
+    # skip those not modified since the cutoff.
+    if since_ts is not None and mtime < since_ts:
+        return False
     # Re-extract if the source changed after the output was last written.
     return mtime > os.path.getmtime(out_path)
 

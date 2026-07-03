@@ -86,6 +86,14 @@ class ExtractStalenessTest(unittest.TestCase):
         self.assertIn("EXTRACT", out)
         self.assertNotIn("SKIP(unchanged)", out)
 
+    def test_missing_output_reextracted_despite_since_gate(self) -> None:
+        # Missing output must (re)extract even when --since would exclude the
+        # (older) source; --since only narrows files that already have output.
+        os.utime(self.source, (1000, 1000))  # source well in the past
+        out = self._run("--since", "2099-01-01", "--verbose")
+        self.assertIn("EXTRACT", out)
+        self.assertTrue(self.out_file.exists())
+
     def test_output_newer_is_skipped(self) -> None:
         self._run()
         # Output at least as new as source -> skip.
