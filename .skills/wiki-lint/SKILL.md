@@ -26,7 +26,21 @@ You are performing a health check on an Obsidian wiki. Your goal is to find and 
 
 Run these checks in order. Report findings as you go.
 
+### Check 1–3 fast path: vault_health.py
+
+Before doing Checks 1, 2, 3, and 3a by hand, look for `scripts/vault_health.py` under this skill's own base directory (the harness provides that path when the skill is invoked) — this holds across a git clone, a `~/.claude/skills` copy, a plugin cache install, and the pip-packaged `_data/skills` copy. If it exists, run it first:
+
+```bash
+python3 <skill-base-dir>/scripts/vault_health.py --path "$OBSIDIAN_VAULT_PATH" --json
+```
+
+(Fallback: `$OBSIDIAN_WIKI_REPO/.skills/wiki-lint/scripts/vault_health.py` if the base directory isn't available for some reason.)
+
+This is read-only and deterministic. Use its `issues` array to produce the Check 1 (orphans), Check 2 (broken links), and Check 3/3a (frontmatter/summary) report sections directly — skip the manual grep steps below for those checks. If the script is missing or the command fails, fall back to the manual steps in each check.
+
 ### 1. Orphaned Pages
+
+Fast path: covered by vault_health.py when available (see above).
 
 Find pages with zero incoming wikilinks. These are knowledge islands that nothing connects to.
 
@@ -40,6 +54,8 @@ Find pages with zero incoming wikilinks. These are knowledge islands that nothin
 - Add wikilinks in appropriate sections
 
 ### 2. Broken Wikilinks
+
+Fast path: covered by vault_health.py when available (see above).
 
 Find `[[wikilinks]]` that point to pages that don't exist.
 
@@ -55,6 +71,8 @@ Find `[[wikilinks]]` that point to pages that don't exist.
 
 ### 3. Missing Frontmatter
 
+Fast path: covered by vault_health.py when available (see above).
+
 Every page should have: title, category, tags, sources, created, updated.
 
 **How to check:**
@@ -65,6 +83,8 @@ Every page should have: title, category, tags, sources, created, updated.
 - Add missing fields with reasonable defaults
 
 ### 3a. Missing Summary (soft warning)
+
+Fast path: covered by vault_health.py when available (see above).
 
 Every page *should* have a `summary:` frontmatter field — 1–2 sentences, ≤200 chars. This is what cheap retrieval (e.g. `wiki-query`'s index-only mode) reads to avoid opening page bodies.
 

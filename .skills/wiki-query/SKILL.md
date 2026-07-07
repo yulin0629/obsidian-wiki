@@ -50,6 +50,20 @@ Pages with no `visibility/` tag, or tagged `visibility/public`, are always inclu
 
 In filtered mode, note the filter in the Step 6 log entry: `mode=filtered`.
 
+## False-Absence Guard (hard rule)
+
+This is the shared False-Absence Guard from `llm-wiki/SKILL.md`, applied to query answers:
+
+**Never claim a page, topic, or fact "isn't in the wiki" before exhausting search.** False absence — reporting nothing found when the wiki actually covers it — is the most common failure mode of this skill, more common than fabrication, because it's silent and looks like a normal answer.
+
+Minimum bar for an exhaustive search before declaring absence:
+- The Step 2 index pass — title, tags, aliases, and `summary:` frontmatter — across **every** category folder (`concepts/`, `entities/`, `skills/`, `references/`, `synthesis/`, `journal/`, `projects/`), not just the one folder that seems most relevant.
+- At least one content grep rephrased with synonyms or aliases for the query term, not only the user's exact wording.
+
+If your search didn't reach that bar, don't present it as a complete conclusion. Say exactly what you checked — e.g. "only scanned the index and frontmatter, no full-text grep yet" — so a partial scan never reads as a final answer.
+
+When in doubt, over-include and flag the uncertainty rather than under-report.
+
 ## Retrieval Protocol
 
 **Follow the Retrieval Primitives table in `llm-wiki/SKILL.md`.** Reading is the dominant cost of this skill — use the cheapest primitive that answers the question and escalate only when it can't. Never jump straight to full-page reads.
@@ -188,7 +202,7 @@ Compose your answer from wiki content:
 - Cite specific wiki pages using `[[page-name]]` notation
 - Note which step the answer came from ("found in summary" vs "grepped section" vs "full page read") — helps the user understand confidence
 - If the wiki has contradictions, present both sides
-- If the wiki doesn't cover something, say so explicitly
+- If the wiki doesn't cover something, say so explicitly — but only after the search clears the False-Absence Guard above
 - Suggest which sources might fill the gap
 
 **Page trust annotations:** For every page cited in your answer, check its `lifecycle` frontmatter and compute `is_stale = (today − updated) > 90 days`. Annotate risky pages inline so the user knows which citations to verify:

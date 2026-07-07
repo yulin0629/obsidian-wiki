@@ -1,7 +1,7 @@
 {
   "name": "wiki-kit",
-  "description": "33 wiki skills: history-ingest per AI tool, query/ingest/maintain the vault, cross-linking, tagging, export/import, and more.",
-  "version": "1.1.1",
+  "description": "33 wiki skills: history-ingest per AI tool, query/ingest/maintain the vault, cross-linking, tagging, export/import, and more. Ships SessionStart/PostToolUse vault hooks.",
+  "version": "1.2.2",
   "author": {
     "name": "Yi-Cian Wang"
   },

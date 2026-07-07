@@ -226,7 +226,7 @@ After ingesting, immediately synthesize and return an answer from the newly inge
 **Gaps:** <What the sessions didn't cover that might be relevant>
 ```
 
-If a query was given but no relevant sessions were found, say so explicitly: "No sessions about '<query>' found in `<agent>` history. The most recent sessions covered: <list topics from last 3 sessions>."
+Before declaring "no sessions found," apply the False-Absence Guard (`llm-wiki/SKILL.md`): rerun the search with at least one synonym or rephrasing of the query, not just the user's exact wording. If a query was given and that rephrased search still turns up nothing, say so explicitly: "No sessions about '<query>' found in `<agent>` history. The most recent sessions covered: <list topics from last 3 sessions>." If time didn't allow the rephrased search, label the result "unverified — only searched the exact query term" instead of a flat absence claim.
 
 ---
 

@@ -100,6 +100,8 @@ Compute:
 
 If no specific tools are given, compare all tools pairwise (limit to pairs with >0 overlap or unique pages to keep output concise).
 
+**Apply the False-Absence Guard (`llm-wiki/SKILL.md`) before asserting a gap.** `only_in_a` / `only_in_b` are computed from `.manifest.json` source tagging, not from a search of the other tool's actual content — a page can be missing from `tool_pages[b]` just because its `sources` frontmatter wasn't tagged, not because `tool-b` never touched the topic. Before reporting a page or topic as "only in <tool-a>" / "<tool-b> has never touched it", rephrase the topic with synonyms and grep it against `tool-b`'s own pages and sessions. If that check isn't feasible or comes up empty, label the item an **"unverified gap"** in the output rather than asserting it as one.
+
 Present:
 
 ```

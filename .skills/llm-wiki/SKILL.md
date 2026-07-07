@@ -466,6 +466,18 @@ Reading the vault is the dominant cost of every read-side skill. Use the cheapes
 
 Skills that consume this table: `wiki-query`, `cross-linker`, `wiki-lint`, `wiki-status` (insights mode). Any new skill that reads the vault should cite this section rather than reinvent the pattern.
 
+## False-Absence Guard
+
+Never claim that a page, topic, or fact "isn't in the vault" — or that one source/tool has never covered something — before exhausting search. False absence (reporting nothing found when the corpus actually covers it) is the failure mode to guard against here: it's silent and reads like a normal answer, unlike fabrication, which usually gets caught.
+
+Minimum bar before declaring absence:
+- Search across **every** relevant category folder or source, not just the one that seems most likely.
+- At least one search rephrased with synonyms or aliases, not only the exact query term.
+
+If the search didn't clear that bar, don't present the result as a complete conclusion — say exactly what was checked so a partial scan never reads as a final answer. When in doubt, over-include and flag the uncertainty rather than assert a gap.
+
+Skills that consume this guard: `wiki-query`, `memory-bridge` (diff/gap mode), `wiki-agent`, `wiki-status`. Any skill whose output can assert that content is missing or absent should cite this section rather than reinvent the rule.
+
 ## QMD Index Freshness
 
 QMD is an optional search index layered on top of the vault. The markdown vault is the source of truth. Any skill that writes wiki markdown should refresh QMD after the vault write completes, but only when `QMD_WIKI_COLLECTION` is configured and the local QMD transport is available. If QMD refresh fails, keep the vault changes and report the QMD status separately.

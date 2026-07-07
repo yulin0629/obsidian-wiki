@@ -1,0 +1,28 @@
+{
+  "description": "Obsidian wiki conversation loop: inject recent vault context at session start, validate wiki page frontmatter on every write.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/wiki-session-context.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/wiki-validate-frontmatter.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
+  }
+}
