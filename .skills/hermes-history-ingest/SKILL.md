@@ -10,6 +10,12 @@ description: >
 
 # Hermes History Ingest — Conversation & Memory Mining
 
+**Session knowledge closure:** The selected history files, memory files, checkpoints, summaries, and transcript entries for this agent are the only factual sources for this skill. Do not add background knowledge from model training, other tools, package docs, local files outside the selected evidence set, or the current conversation unless that fact appears in the selected evidence. If outside context seems useful, mark it as an open question or skip it — never present it as extracted history knowledge.
+
+**Evidence ledger:** Before writing or updating any durable wiki page, keep a private ledger mapping each extracted claim to its source evidence using this shape: `<agent>:<source-file-basename>#<entry-id-or-line>`. Use the concrete agent prefix for this skill (`claude`, `codex`, `copilot`, `hermes`, `openclaw`, or `pi`). Every `^[extracted]` claim must have a ledger entry.
+
+**Source verification gate:** Before writing, verify every `^[extracted]` claim against the ledger. Proper nouns, commands, filenames, paths, URLs, repo names, dates, and numeric claims must appear in the cited evidence entry; use `rg` or `grep` on the source file when in doubt. Claims that cannot be verified must be deleted or downgraded to `^[inferred]`; never leave unverifiable claims marked as extracted.
+
 You are extracting knowledge from the user's Hermes agent history and distilling it into the Obsidian wiki. Hermes stores both free-form memories and structured session transcripts — focus on durable knowledge, not operational telemetry.
 
 This skill can be invoked directly or via the `wiki-history-ingest` router (`/wiki-history-ingest hermes`).
