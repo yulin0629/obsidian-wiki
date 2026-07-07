@@ -102,7 +102,7 @@ one-line-install convention) — still **not** an install, just a manifest.
 
 ## Step 4: Optionally lean on skill-creator
 
-`skill-creator` ships reusable scripts (`$OBSIDIAN_WIKI_REPO/.skills/skill-creator/scripts/`):
+`skill-creator` ships reusable scripts in its own `scripts/` dir — resolve it as a sister skill of this one (`<this-skill-base-dir>/../skill-creator/scripts/`; skills are always sibling directories across a git clone, a `~/.claude/skills` copy, a plugin cache install, and the pip-packaged `_data/skills` copy):
 - `improve_description.py` — tighten the generated `description` for better triggering.
 - `package_skill.py` — bundle the skill dir into a distributable archive.
 - `quick_validate.py` — sanity-check the skill's structure.
