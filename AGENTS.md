@@ -1,6 +1,6 @@
 # Obsidian Wiki — Agent Context
 
-A **skill-based framework** for building and maintaining an Obsidian knowledge base. No scripts or dependencies — everything is markdown instructions that you execute directly.
+A **skill-based framework** for building and maintaining an Obsidian knowledge base. Mostly markdown instructions that you execute directly; a few skills ship self-contained Python helper scripts in their own `scripts/` dir (stdlib only, no external dependencies).
 
 ## Configuration
 
