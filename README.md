@@ -241,6 +241,12 @@ Modes: `by-tag` (default — top 10 tags), `by-category` (the seven vault folder
 
 - **Audit and lint.** Find orphaned pages, broken wikilinks, stale content, contradictions, missing frontmatter. See a dashboard of what's been ingested vs what's pending.
 
+- **Deterministic vault health check.** The mechanical part of `wiki-lint` (orphans, broken wikilinks, frontmatter completeness) has a stdlib-only Python fast path — `vault_health.py`, adapted from [obsidian-second-brain](https://github.com/eugeniughelbur/obsidian-second-brain) (MIT) — that handles the edge cases LLM re-interpretation gets wrong: wikilinks inside code fences, em-dash/hyphen normalization, alias resolution, BOM-prefixed files. Cheap and reproducible, and the markdown instructions remain the fallback when the script isn't available.
+
+- **Session hooks (Claude Code plugin).** The wiki-kit plugin ships a SessionStart hook that injects `hot.md` and the tail of `log.md` into every new session, and a PostToolUse hook that validates required frontmatter whenever a vault page is written or edited. Combined with the Stop-hook quick capture, the wiki participates in the conversation loop instead of only when a skill is invoked.
+
+- **False-absence guard.** Before `wiki-query` (or any read skill) may claim the wiki has nothing on a topic, it must finish an index pass across all category folders plus at least one synonym grep of page bodies. Claiming absence after a shallow search is the most damaging retrieval failure — worse than a slow answer.
+
 - **Automated cross-linking.** After ingesting new pages, the cross-linker scans the vault for unlinked mentions and weaves them into the knowledge graph with `[[wikilinks]]`. No more orphan pages.
 
 - **Tag taxonomy.** A controlled vocabulary of canonical tags stored in `_meta/taxonomy.md`, with a skill that audits and normalizes tags across your entire vault.
