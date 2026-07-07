@@ -38,14 +38,14 @@ Check `.manifest.json` for each source file (conversation JSONL, memory file). O
 
 This is usually what you want — the user ran a few new sessions and wants to capture the delta.
 
-> **Canonical paths when comparing.** The manifest keys are absolute paths with `~` expanded (see `llm-wiki/SKILL.md` → `.manifest.json`). Before deciding a file is "new", expand its path the same way — otherwise a file already tracked as `~/.claude/...` looks new when you scanned it as `/Users/me/.claude/...` (or vice-versa) and gets re-ingested. The `scripts/manifest.py` helper does this for you:
+> **Canonical paths when comparing.** The manifest keys are absolute paths with `~` expanded (see `llm-wiki/SKILL.md` → `.manifest.json`). Before deciding a file is "new", expand its path the same way — otherwise a file already tracked as `~/.claude/...` looks new when you scanned it as `/Users/me/.claude/...` (or vice-versa) and gets re-ingested. The `manifest.py` helper does this for you — it lives in the sister skill `llm-wiki`'s `scripts/` directory, reached via this skill's own base directory (the harness provides that path when the skill is invoked): this holds across a git clone, a `~/.claude/skills` copy, a plugin cache install, and the pip-packaged `_data/skills` copy, because skills are always sibling directories under the same skills root.
 >
 > ```bash
 > # New/modified sources, honoring WIKI_SKIP_PROJECTS + --skip, paths already canonical:
-> python3 "$OBSIDIAN_WIKI_REPO/scripts/manifest.py" delta "$OBSIDIAN_VAULT_PATH" \
+> python3 "<skill-base-dir>/../llm-wiki/scripts/manifest.py" delta "$OBSIDIAN_VAULT_PATH" \
 >   --scan "$CLAUDE_HISTORY_PATH/projects/*/memory/*.md"
 > # One-time repair if the manifest already mixes ~ and absolute keys:
-> python3 "$OBSIDIAN_WIKI_REPO/scripts/manifest.py" normalize "$OBSIDIAN_VAULT_PATH" --dry-run
+> python3 "<skill-base-dir>/../llm-wiki/scripts/manifest.py" normalize "$OBSIDIAN_VAULT_PATH" --dry-run
 > ```
 >
 > The helper is optional — if it's unavailable, do the same expansion inline before every manifest lookup and write.
@@ -53,19 +53,23 @@ This is usually what you want — the user ran a few new sessions and wants to c
 ### Pre-extraction (recommended — run before ingest)
 
 Raw JSONL files are 80-90% noise: `tool_use` blocks, `thinking` blocks, `progress` events, and
-`file-history-snapshot` entries dominate by byte count.  The `scripts/extract-jsonl.py` helper
-strips all of that and writes compact signal-only JSON to `~/.claude/extracted/`, achieving
+`file-history-snapshot` entries dominate by byte count.  The `extract-jsonl.py` helper, which
+ships under this skill's own `scripts/` directory, strips all of that and writes compact
+signal-only JSON to `~/.claude/extracted/`, achieving
 **50–200× file-size reduction** (e.g. 12 MB JSONL → 64 KB extracted).  This lets the skill read
 5–10× more conversations per run within the same token budget.
 
-Run it as a pre-step before invoking this skill:
+Run it as a pre-step before invoking this skill. Look for `scripts/extract-jsonl.py` under this
+skill's own base directory (the harness provides that path when the skill is invoked) — this
+holds across a git clone, a `~/.claude/skills` copy, a plugin cache install, and the
+pip-packaged `_data/skills` copy:
 
 ```bash
 # First run — extract everything (skip excluded projects)
-python3 "$OBSIDIAN_WIKI_REPO/scripts/extract-jsonl.py" --skip tsg,autom8
+python3 "<skill-base-dir>/scripts/extract-jsonl.py" --skip tsg,autom8
 
 # Incremental — only sessions modified in the last day
-python3 "$OBSIDIAN_WIKI_REPO/scripts/extract-jsonl.py" \
+python3 "<skill-base-dir>/scripts/extract-jsonl.py" \
     --since "$(date -v-1d +%Y-%m-%d)" --skip tsg,autom8
 ```
 

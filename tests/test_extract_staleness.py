@@ -13,7 +13,7 @@ from pathlib import Path
 # extract-jsonl.py has a hyphen, so import it by file path.
 _SPEC = importlib.util.spec_from_file_location(
     "extract_jsonl",
-    Path(__file__).resolve().parent.parent / "scripts" / "extract-jsonl.py",
+    Path(__file__).resolve().parent.parent / ".skills" / "claude-history-ingest" / "scripts" / "extract-jsonl.py",
 )
 extract_jsonl = importlib.util.module_from_spec(_SPEC)
 _SPEC.loader.exec_module(extract_jsonl)  # type: ignore[union-attr]
