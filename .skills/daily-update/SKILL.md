@@ -98,70 +98,20 @@ Stale sources (run to sync):
 
 ### Setup Mode (triggered by "set up the daily cron" or "install terminal notification")
 
-Walk the user through first-time setup:
+The old standalone daily-update detector script and its launchd plist are retired (the detector read a manifest field that no longer exists, so its staleness count was always 0). Scheduled automation is now handled by two launchd jobs in `$OBSIDIAN_WIKI_REPO/scripts/`:
 
-**Step 1: Verify script exists**
+- **`wiki-ingest-job.sh`** + `com.obsidian-wiki.ingest.plist` — per-machine scheduled delta ingest (install on every machine; substitute `__HOME__` in the plist and stagger the schedule per machine).
+- **`wiki-global-job.sh`** + `com.obsidian-wiki.global.plist` — global derived-file rebuild + lint report (install on the designated owner machine only).
 
-Check that `$OBSIDIAN_WIKI_REPO/scripts/daily-update.sh` exists and is executable. If not, point the user to it.
-
-**Step 2: Install launchd plist**
-
-```bash
-# Replace placeholder in plist
-sed "s|OBSIDIAN_WIKI_REPO|$OBSIDIAN_WIKI_REPO|g" \
-  "$OBSIDIAN_WIKI_REPO/scripts/com.obsidian-wiki.daily-update.plist" \
-  > "$HOME/Library/LaunchAgents/com.obsidian-wiki.daily-update.plist"
-
-# Load it
-launchctl load "$HOME/Library/LaunchAgents/com.obsidian-wiki.daily-update.plist"
-```
-
-**Step 3: Install terminal notification (optional)**
-
-Ask the user: "Do you want a terminal reminder when your wiki is stale? (y/n)" — skip this step if they say no, or if the environment is headless/VPS.
-
-If yes, detect the user's shell and target the right rc file:
+Install pattern:
 
 ```bash
-SHELL_NAME=$(basename "$SHELL")   # zsh, bash, fish, etc.
-case "$SHELL_NAME" in
-  zsh)  RC_FILE="$HOME/.zshrc" ;;
-  bash) RC_FILE="$HOME/.bashrc" ;;
-  *)    echo "Shell '$SHELL_NAME' not auto-detected. Add the source line manually to your shell rc file." ; return ;;
-esac
+sed "s|__HOME__|$HOME|g" "$OBSIDIAN_WIKI_REPO/scripts/com.obsidian-wiki.ingest.plist" \
+  > "$HOME/Library/LaunchAgents/com.obsidian-wiki.ingest.plist"
+launchctl bootstrap gui/$(id -u) "$HOME/Library/LaunchAgents/com.obsidian-wiki.ingest.plist"
 ```
 
-Check if `wiki-notify.sh` is already sourced in that rc file. If not, append:
-
-```bash
-echo "" >> "$RC_FILE"
-echo "# obsidian-wiki terminal notification" >> "$RC_FILE"
-echo "source $OBSIDIAN_WIKI_REPO/scripts/wiki-notify.sh" >> "$RC_FILE"
-```
-
-For Fish shell, source syntax is different — provide the manual instruction:
-```fish
-# Add to ~/.config/fish/config.fish:
-bass source $OBSIDIAN_WIKI_REPO/scripts/wiki-notify.sh
-# (requires bass plugin, or copy the logic natively)
-```
-
-**Step 4: Run the script once**
-
-```bash
-bash "$OBSIDIAN_WIKI_REPO/scripts/daily-update.sh"
-```
-
-This initializes `$STATE_DIR/.last_update` so the terminal notification works immediately.
-
-**Step 5: Confirm**
-
-Tell the user:
-- The cron runs daily at 9 AM (or on next login if missed)
-- Terminal notifications appear when the wiki is >20 hours stale
-- State is stored in `~/.obsidian-wiki/state/<vault-id>/` — supports multiple vaults independently
-- They can run `/daily-update` anytime to force a sync
-- Logs go to `/tmp/obsidian-wiki-daily.log`
+Both jobs require `WIKI_MACHINE_KEY` and (for ingest) `WIKI_INGEST_HARNESSES` in `~/.obsidian-wiki/config`. The optional terminal notification (`scripts/wiki-notify.sh`) can still be sourced from the shell rc manually.
 
 ## QMD Refresh After Vault Writes
 
