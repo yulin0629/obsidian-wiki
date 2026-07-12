@@ -142,8 +142,10 @@ Chronological append-only record tracking every operation. Each entry is parseab
 - [2024-03-17T10:05:00Z] REBUILD archived_to="_archives/..." previous_pages=87
 ```
 
-### `.manifest.json`
+### `.manifest.json` / `.manifest.<machine>.json`
 Tracks every source file that has been ingested — path, timestamps, what wiki pages it produced. This is the backbone of the delta system. See the `wiki-status` skill for the full schema.
+
+**Per-machine shards (schema v2).** Session-history sources are machine-local, so each machine tracks its own ingests in a shard named `.manifest.<machine-key>.json` (e.g. `.manifest.macbook-pro.json`). The shard in use is resolved by `scripts/manifest.py path <vault>` — it returns the shard when `WIKI_MACHINE_KEY` is set (env var, or a `WIKI_MACHINE_KEY=` line in `~/.obsidian-wiki/config`), and the legacy single `.manifest.json` otherwise. `scripts/manifest.py init <vault>` materializes a machine's shard, seeding it wholesale from the legacy manifest on first run. Discipline: a machine reads and writes **only its own shard**, never another machine's — this is what makes concurrent multi-machine ingest conflict-free.
 
 The manifest enables:
 - **Delta computation** — what's new or modified since last ingest

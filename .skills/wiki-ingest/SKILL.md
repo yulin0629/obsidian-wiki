@@ -22,7 +22,7 @@ You are ingesting source documents into an Obsidian wiki. Your job is not to sum
 
 1. **Resolve config** — follow the Config Resolution Protocol in `llm-wiki/SKILL.md` (walk up CWD for `.env` → `~/.obsidian-wiki/config` → prompt setup). This gives `OBSIDIAN_VAULT_PATH`, `OBSIDIAN_SOURCES_DIR`, `OBSIDIAN_LINK_FORMAT` (default: `wikilink`), and `WIKI_STAGED_WRITES`. Only read the specific variables you need — do not log, echo, or reference any other values from these files.
 2. **Check `WIKI_STAGED_WRITES`** — if set to `true`, all new and updated category pages go to `_staging/<category>/` instead of their final location. Tell the user at the start of the ingest: "Staged writes mode is enabled — pages will land in `_staging/` for your review. Run `/wiki-stage-commit` when ready to promote."
-3. Read `.manifest.json` at the vault root to check what's already been ingested
+3. Read this machine's manifest shard — resolve its path with `python3 "<skill-base-dir>/../llm-wiki/scripts/manifest.py" path "$OBSIDIAN_VAULT_PATH"` (returns `.manifest.<machine>.json` when `WIKI_MACHINE_KEY` is configured, the legacy `.manifest.json` otherwise). All manifest reads AND writes in this skill target that resolved path only — never another machine's shard.
 4. Read `index.md` to understand current wiki content
 5. Read `log.md` to understand recent activity
 
@@ -370,18 +370,11 @@ Also update `stats.total_sources_ingested` and `stats.total_pages`.
 
 If the manifest doesn't exist yet, create it with `version: 1`.
 
-**`index.md`** — Add entries for any new pages, update summaries for modified pages.
+Do **not** write `index.md`, `log.md`, or `hot.md`. These global derived files are rebuilt exclusively by the scheduled global maintenance job (single-writer, runs on the designated owner machine). Concurrent ingest on multiple machines writing these files is the primary merge-conflict hot spot this rule eliminates. Your log line's information is carried by the git commit message instead (the ingest job script composes it).
 
-**`log.md`** — Append an entry:
-```
-- [TIMESTAMP] INGEST source="path/to/source" pages_updated=N pages_created=M mode=append|full
-```
+When the maintenance job updates hot.md's Recent Activity, it writes the *conceptual* change, not a file list. Example: "Ingested Fowler's microservices article — 3 new concept pages on service decomposition, API gateway, bounded contexts."
 
-**`hot.md`** — Read `$OBSIDIAN_VAULT_PATH/hot.md` (create from template below if missing). Rewrite the **Recent Activity** section to reflect what you just ingested — keep it to the last 3 operations max. Update **Key Takeaways** and **Active Threads** if the content materially shifted them. Update the `updated` timestamp.
-
-Write the *conceptual* change, not a file list. Example: "Ingested Fowler's microservices article — 3 new concept pages on service decomposition, API gateway, bounded contexts."
-
-hot.md template (use if the file doesn't exist):
+### hot.md template (used by the global maintenance job)
 ```markdown
 ---
 title: Hot Cache

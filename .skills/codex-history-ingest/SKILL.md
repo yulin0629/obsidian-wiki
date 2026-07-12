@@ -23,7 +23,7 @@ This skill can be invoked directly or via the `wiki-history-ingest` router (`/wi
 ## Before You Start
 
 1. **Resolve config** — follow the Config Resolution Protocol in `llm-wiki/SKILL.md` (walk up CWD for `.env` → `~/.obsidian-wiki/config` → prompt setup). This gives `OBSIDIAN_VAULT_PATH` and `CODEX_HISTORY_PATH` (defaults to `~/.codex`)
-2. Read `.manifest.json` at the vault root to check what has already been ingested
+2. Read this machine's manifest shard — resolve its path with `python3 "<skill-base-dir>/../llm-wiki/scripts/manifest.py" path "$OBSIDIAN_VAULT_PATH"` (returns `.manifest.<machine>.json` when `WIKI_MACHINE_KEY` is configured, the legacy `.manifest.json` otherwise). All manifest reads AND writes in this skill target that resolved path only — never another machine's shard.
 3. Read `index.md` at the vault root to understand what the wiki already contains
 
 ## Ingest Modes
@@ -196,13 +196,7 @@ Add/update a top-level project/session summary block:
 
 ### Update special files
 
-Update `index.md` and `log.md`:
-
-```
-- [TIMESTAMP] CODEX_HISTORY_INGEST sessions=N pages_updated=X pages_created=Y mode=append|full
-```
-
-**`hot.md`** — Read `$OBSIDIAN_VAULT_PATH/hot.md` (create from the template in `wiki-ingest` if missing). Update **Recent Activity** with a one-line summary — e.g. "Ingested 12 Codex sessions; surfaced recurring patterns in CLI tooling and shell scripting." Keep the last 3 operations. Update `updated` timestamp.
+Do **not** write `index.md`, `log.md`, or `hot.md`. These global derived files are rebuilt exclusively by the scheduled global maintenance job (single-writer, runs on the designated owner machine). Concurrent ingest on multiple machines writing these files is the primary merge-conflict hot spot this rule eliminates. Your log line's information is carried by the git commit message instead (the ingest job script composes it).
 
 ## Privacy and Compliance
 

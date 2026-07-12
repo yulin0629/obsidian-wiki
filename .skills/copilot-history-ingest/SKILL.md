@@ -26,7 +26,7 @@ This skill can be invoked directly or via the `wiki-history-ingest` router (`/wi
 ## Before You Start
 
 1. **Resolve config** — follow the Config Resolution Protocol in `llm-wiki/SKILL.md` (walk up CWD for `.env` → `~/.obsidian-wiki/config` → prompt setup). This gives `OBSIDIAN_VAULT_PATH`, `COPILOT_HISTORY_PATH` (defaults to `~/.copilot/session-state`), and `COPILOT_VSCODE_STORAGE_PATH` (VS Code `workspaceStorage`; platform-specific — ask the user if absent)
-2. Read `.manifest.json` at the vault root to check what's already been ingested
+2. Read this machine's manifest shard — resolve its path with `python3 "<skill-base-dir>/../llm-wiki/scripts/manifest.py" path "$OBSIDIAN_VAULT_PATH"` (returns `.manifest.<machine>.json` when `WIKI_MACHINE_KEY` is configured, the legacy `.manifest.json` otherwise). All manifest reads AND writes in this skill target that resolved path only — never another machine's shard.
 3. Read `index.md` at the vault root to know what the wiki already contains
 
 ## Ingest Modes
@@ -323,13 +323,9 @@ Also update the `projects` section of the manifest:
 
 ### Create journal entry + update special files
 
-Update `index.md` and `log.md` per the standard process:
+Write the journal entry to `journal/<date>-copilot-history-$WIKI_MACHINE_KEY.md` (when `WIKI_MACHINE_KEY` is unset, fall back to `journal/<date>-copilot-history.md`). The machine suffix prevents two machines ingesting the same harness on the same day from colliding on one journal path.
 
-```
-- [TIMESTAMP] COPILOT_HISTORY_INGEST projects=N sessions=M checkpoints=C pages_updated=X pages_created=Y mode=append|full
-```
-
-**`hot.md`** — Read `$OBSIDIAN_VAULT_PATH/hot.md` (create from the template in `wiki-ingest` if missing). Update **Recent Activity** with a one-line summary — e.g. "Ingested 5 Copilot sessions across 2 projects; surfaced patterns in API design and testing strategy." Keep the last 3 operations. Update **Active Threads** if any ongoing project is now better understood. Update `updated` timestamp.
+Do **not** write `index.md`, `log.md`, or `hot.md`. These global derived files are rebuilt exclusively by the scheduled global maintenance job (single-writer, runs on the designated owner machine). Concurrent ingest on multiple machines writing these files is the primary merge-conflict hot spot this rule eliminates. Your log line's information is carried by the git commit message instead (the ingest job script composes it).
 
 ## Privacy
 

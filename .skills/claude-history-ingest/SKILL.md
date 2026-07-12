@@ -23,7 +23,7 @@ This skill can be invoked directly or via the `wiki-history-ingest` router (`/wi
 ## Before You Start
 
 1. **Resolve config** — follow the Config Resolution Protocol in `llm-wiki/SKILL.md` (walk up CWD for `.env` → `~/.obsidian-wiki/config` → prompt setup). This gives `OBSIDIAN_VAULT_PATH` and `CLAUDE_HISTORY_PATH` (defaults to `~/.claude`)
-2. Read `.manifest.json` at the vault root to check what's already been ingested
+2. Read this machine's manifest shard — resolve its path with `python3 "<skill-base-dir>/../llm-wiki/scripts/manifest.py" path "$OBSIDIAN_VAULT_PATH"` (returns `.manifest.<machine>.json` when `WIKI_MACHINE_KEY` is configured, the legacy `.manifest.json` otherwise). All manifest reads AND writes in this skill target that resolved path only — never another machine's shard.
 3. Read `index.md` at the vault root to know what the wiki already contains
 4. **Project Scoping** — read `WIKI_SKIP_PROJECTS` from config (comma-separated substrings). Exclude any project directory whose name contains one of them from **every** step below (scan, delta, sampling, manifest writes). If the user names extra projects to skip this run, add them. Apply the exclusion **once, uniformly** — don't hand-write `grep -v` filters into individual commands, which drifts between the scan and manifest steps.
 
@@ -415,13 +415,9 @@ Also update the `projects` section of the manifest:
 
 ### Create journal entry + update special files
 
-Update `index.md` and `log.md` per the standard process:
+Write the journal entry to `journal/<date>-claude-history-$WIKI_MACHINE_KEY.md` (when `WIKI_MACHINE_KEY` is unset, fall back to `journal/<date>-claude-history.md`). The machine suffix prevents two machines ingesting the same harness on the same day from colliding on one journal path.
 
-```
-- [TIMESTAMP] CLAUDE_HISTORY_INGEST projects=N conversations=M desktop_sessions=D audit_logs=A pages_updated=X pages_created=Y mode=append|full
-```
-
-**`hot.md`** — Read `$OBSIDIAN_VAULT_PATH/hot.md` (create from the template in `wiki-ingest` if missing). Update **Recent Activity** with a one-line summary — e.g. "Ingested 5 Claude conversations across 2 projects; surfaced patterns in API design and testing strategy." Keep the last 3 operations. Update **Active Threads** if any ongoing project is now better understood. **Update the `updated:` field in the frontmatter** to the current timestamp — this is easy to forget; the body edit and the frontmatter bump must both happen.
+Do **not** write `index.md`, `log.md`, or `hot.md`. These global derived files are rebuilt exclusively by the scheduled global maintenance job (single-writer, runs on the designated owner machine). Concurrent ingest on multiple machines writing these files is the primary merge-conflict hot spot this rule eliminates. Your log line's information is carried by the git commit message instead (the ingest job script composes it).
 
 ## Privacy
 
