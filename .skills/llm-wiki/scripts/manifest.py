@@ -32,16 +32,53 @@ def canonical(path: str) -> str:
     return os.path.abspath(os.path.expanduser(os.path.expandvars(path)))
 
 
-def manifest_path(vault: str) -> str:
+def machine_key() -> str | None:
+    """Resolve this machine's shard key: $WIKI_MACHINE_KEY, else the
+    WIKI_MACHINE_KEY= line in ~/.obsidian-wiki/config, else None (legacy mode)."""
+    key = os.environ.get("WIKI_MACHINE_KEY", "").strip()
+    if key:
+        return key
+    cfg = os.path.expanduser("~/.obsidian-wiki/config")
+    if os.path.exists(cfg):
+        with open(cfg) as f:
+            for line in f:
+                line = line.strip()
+                if line.startswith("WIKI_MACHINE_KEY="):
+                    val = line.split("=", 1)[1].strip().strip('"').strip("'")
+                    if val:
+                        return val
+    return None
+
+
+def legacy_manifest_path(vault: str) -> str:
     return os.path.join(canonical(vault), ".manifest.json")
+
+
+def manifest_path(vault: str) -> str:
+    """Shard path when a machine key is configured; legacy single file otherwise."""
+    key = machine_key()
+    if key:
+        return os.path.join(canonical(vault), f".manifest.{key}.json")
+    return legacy_manifest_path(vault)
 
 
 def load_manifest(vault: str) -> dict:
     mp = manifest_path(vault)
-    if not os.path.exists(mp):
-        return {"version": 1, "sources": {}, "projects": {}, "stats": {}}
-    with open(mp) as f:
-        return json.load(f)
+    if os.path.exists(mp):
+        with open(mp) as f:
+            return json.load(f)
+    key = machine_key()
+    legacy = legacy_manifest_path(vault)
+    if key and os.path.exists(legacy):
+        # First run on this machine after the shard split: seed wholesale from
+        # the legacy manifest. Entries for files that only exist on other
+        # machines are inert for delta (their paths never match locally).
+        with open(legacy) as f:
+            m = json.load(f)
+        m["version"] = 2
+        m["machine"] = key
+        return m
+    return {"version": 2 if key else 1, "machine": key, "sources": {}, "projects": {}, "stats": {}}
 
 
 def _newest(a: dict, b: dict) -> dict:
@@ -180,6 +217,25 @@ def cmd_delta(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_path(args: argparse.Namespace) -> int:
+    print(manifest_path(args.vault))
+    return 0
+
+
+def cmd_init(args: argparse.Namespace) -> int:
+    """Materialize the shard file (seeding from legacy if present). Idempotent."""
+    mp = manifest_path(args.vault)
+    if os.path.exists(mp):
+        print(f"exists {mp}")
+        return 0
+    m = load_manifest(args.vault)
+    with open(mp, "w") as f:
+        json.dump(m, f, indent=2)
+        f.write("\n")
+    print(f"wrote {mp} (machine={m.get('machine')}, {len(m.get('sources', {}))} seeded sources)")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = p.add_subparsers(dest="command", required=True)
@@ -194,6 +250,14 @@ def main(argv: list[str] | None = None) -> int:
     d.add_argument("--scan", required=True, help="glob of source files (use ** with recursive)")
     d.add_argument("--skip", default=None, help="comma-separated substrings to exclude")
     d.set_defaults(func=cmd_delta)
+
+    pp = sub.add_parser("path", help="print the resolved manifest path (shard-aware)")
+    pp.add_argument("vault")
+    pp.set_defaults(func=cmd_path)
+
+    i = sub.add_parser("init", help="materialize this machine's manifest shard (idempotent)")
+    i.add_argument("vault")
+    i.set_defaults(func=cmd_init)
 
     args = p.parse_args(argv)
     return args.func(args)
