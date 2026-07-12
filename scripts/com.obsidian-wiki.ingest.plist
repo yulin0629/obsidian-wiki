@@ -6,6 +6,9 @@
     <string>/bin/bash</string>
     <string>__HOME__/github/obsidian-wiki/scripts/wiki-ingest-job.sh</string>
   </array>
+  <key>EnvironmentVariables</key><dict>
+    <key>PATH</key><string>__HOME__/.local/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
+  </dict>
   <key>StartCalendarInterval</key><dict>
     <key>Hour</key><integer>8</integer><key>Minute</key><integer>30</integer>
   </dict>
