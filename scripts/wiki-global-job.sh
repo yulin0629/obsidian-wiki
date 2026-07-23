@@ -12,7 +12,9 @@ export LOGNAME="${LOGNAME:-$USER}"
 CONFIG="$HOME/.obsidian-wiki/config"
 [[ -f "$CONFIG" ]] || { echo "[global-job] no config"; exit 1; }
 # shellcheck source=/dev/null
-source "$CONFIG"
+# set -a so config vars are exported: child processes (manifest.py, claude -p)
+# resolve WIKI_MACHINE_KEY from the environment, not the legacy fallback.
+set -a; source "$CONFIG"; set +a
 : "${OBSIDIAN_VAULT_PATH:?}" "${WIKI_MACHINE_KEY:?}"
 [[ "$WIKI_MACHINE_KEY" == "mac-mini-m4" ]] || { echo "[global-job] not the owner machine — exiting"; exit 0; }
 

@@ -8,10 +8,12 @@ set -euo pipefail
 export USER="${USER:-$(id -un)}"
 export LOGNAME="${LOGNAME:-$USER}"
 
-CONFIG="$HOME/.obsidian-wiki/config"
+CONFIG="${WIKI_CONFIG:-$HOME/.obsidian-wiki/config}"
 [[ -f "$CONFIG" ]] || { echo "[ingest-job] no config"; exit 1; }
 # shellcheck source=/dev/null
-source "$CONFIG"
+# set -a so config vars are exported: child processes (manifest.py, claude -p)
+# resolve WIKI_MACHINE_KEY from the environment, not the legacy fallback.
+set -a; source "$CONFIG"; set +a
 : "${OBSIDIAN_VAULT_PATH:?}" "${WIKI_MACHINE_KEY:?}" "${WIKI_INGEST_HARNESSES:?}"
 
 # mkdir-based lock (macOS has no flock(1)); stale locks broken by PID liveness check.
@@ -29,7 +31,8 @@ echo $$ > "$LOCKDIR/pid"
 trap 'rm -rf "$LOCKDIR"' EXIT
 
 # Newest installed wiki-kit plugin version dir (skills root for headless runs).
-SKILLS_ROOT=$(ls -d "$HOME/.claude/plugins/cache/yician-wiki-tools/wiki-kit"/*/ 2>/dev/null | sort -V | tail -1)
+# WIKI_SKILLS_ROOT overrides it (test/rollout: run against the fork before publish).
+SKILLS_ROOT="${WIKI_SKILLS_ROOT:-$(ls -d "$HOME/.claude/plugins/cache/yician-wiki-tools/wiki-kit"/*/ 2>/dev/null | sort -V | tail -1)}"
 [[ -n "$SKILLS_ROOT" ]] || { echo "[ingest-job] wiki-kit plugin not installed"; exit 1; }
 
 cd "$OBSIDIAN_VAULT_PATH"
