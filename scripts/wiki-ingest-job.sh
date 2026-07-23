@@ -2,6 +2,12 @@
 # Per-machine wiki ingest job. Owns all git ops; claude -p does ingest only.
 set -euo pipefail
 
+# launchd's minimal env may omit USER, which Claude Code needs to read its
+# login-keychain OAuth credential (verified: without USER, `claude -p` reports
+# "Not logged in"). Guarantee it regardless of what launchd provides.
+export USER="${USER:-$(id -un)}"
+export LOGNAME="${LOGNAME:-$USER}"
+
 CONFIG="$HOME/.obsidian-wiki/config"
 [[ -f "$CONFIG" ]] || { echo "[ingest-job] no config"; exit 1; }
 # shellcheck source=/dev/null

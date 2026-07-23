@@ -3,6 +3,12 @@
 # Phase-1 whitelist: derived-file rebuild + read-only lint report. Nothing creative.
 set -euo pipefail
 
+# launchd's minimal env may omit USER, which Claude Code needs to read its
+# login-keychain OAuth credential (verified: without USER, `claude -p` reports
+# "Not logged in"). Guarantee it regardless of what launchd provides.
+export USER="${USER:-$(id -un)}"
+export LOGNAME="${LOGNAME:-$USER}"
+
 CONFIG="$HOME/.obsidian-wiki/config"
 [[ -f "$CONFIG" ]] || { echo "[global-job] no config"; exit 1; }
 # shellcheck source=/dev/null
