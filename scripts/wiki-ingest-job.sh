@@ -49,6 +49,7 @@ The vault is $OBSIDIAN_VAULT_PATH. WIKI_MACHINE_KEY=$WIKI_MACHINE_KEY. \
 Do NOT run any git commands; do NOT write index.md, log.md, or hot.md. \
 When done, output one line starting with SUMMARY: describing counts." \
     --setting-sources "" \
+    --model sonnet --effort low \
     --allowedTools "Read,Grep,Glob,Write,Edit,Bash(python3:*),Bash(ls:*),Bash(wc:*)" \
     --max-turns 80 \
     | tee "$HOME/.obsidian-wiki/state/ingest-$WIKI_MACHINE_KEY-$H.out" | tail -3

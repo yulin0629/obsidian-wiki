@@ -47,6 +47,7 @@ Vault: $OBSIDIAN_VAULT_PATH. Do these four things and nothing else: \
 (4) Run the lint checks described in ${SKILLS_ROOT}wiki-lint/SKILL.md in REPORT-ONLY mode and write findings to _reports/lint-$(date +%F).md — do NOT fix anything. \
 Do NOT create/edit/delete any page under concepts/, entities/, synthesis/, projects/, skills/, journal/. Do NOT run git commands that modify state (add/commit/push/checkout) — read-only 'git log' for steps 2-3 is allowed and expected." \
   --setting-sources "" \
+  --model sonnet --effort low \
   --allowedTools "Read,Grep,Glob,Write,Edit,Bash(git log:*),Bash(python3:*),Bash(date:*)" \
   --max-turns 60 | tail -3
 
